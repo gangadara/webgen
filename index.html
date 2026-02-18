@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator v17 (Color Fix)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- EDITOR UI --- */
+        :root {
+            --panel-bg: #121212;
+            --text-main: #e0e0e0;
+            --accent: #00e5ff;
+            --border: #333;
+            --ai-color: #d800ff;
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; height: 100vh; display: flex; overflow: hidden; }
+        
+        .editor-panel {
+            width: 420px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 15px;
+            color: var(--text-main);
+        }
+
+        .preview-panel {
+            flex: 1;
+            background: #000;
+            padding: 20px;
+            display: flex; justify-content: center; align-items: flex-start;
+            background-image: radial-gradient(#222 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow-y: auto;
+        }
+
+        /* AI SECTION */
+        .ai-section {
+            border: 2px dashed var(--ai-color);
+            background: #1a0520;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ai-title { color: var(--ai-color); font-weight: bold; font-size: 0.9rem; }
+        
+        .btn-copy { background: #333; color: white; border: 1px solid #555; padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .btn-copy:hover { background: #444; border-color: #888; }
+        .btn-copy i { margin-right: 4px; }
+
+        textarea.ai-input {
+            width: 100%; height: 60px; background: #000; border: 1px solid #555; color: #0f0; font-family: monospace; font-size: 0.7rem; padding: 5px; border-radius: 4px; resize: vertical; margin-bottom: 5px;
+        }
+        .btn-import { width: 100%; background: var(--ai-color); color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-import:hover { opacity: 0.9; }
+
+        /* UPLOAD BOX */
+        .upload-box {
+            background: #1a1a1a;
+            border: 2px dashed #444;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 5px;
+            color: #888;
+        }
+        .upload-box:hover { background: #222; border-color: var(--accent); color: var(--accent); }
+        .upload-box i { font-size: 1.2rem; margin-bottom: 5px; }
+        .upload-box p { margin: 0; font-size: 0.7rem; }
+        
+        .main-upload { border-color: var(--accent); color: var(--accent); margin-bottom: 20px; padding: 15px; }
+        input[type="file"] { display: none; }
+
+        /* INPUTS */
+        h3 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 5px; letter-spacing: 1px; }
+        label { font-size: 0.75rem; color: #aaa; display: block; margin-bottom: 4px; font-weight: 600; }
+        
+        input[type="text"], textarea, select {
+            width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; font-family: sans-serif;
+        }
+        
+        input[type="color"] { width: 100%; height: 35px; border: none; padding: 0; background: none; cursor: pointer; }
+        input[type="checkbox"] { width: auto; margin-right: 10px; cursor: pointer; }
+
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+
+        /* ITEMS */
+        .item-card { background: #1e1e1e; padding: 10px; border-radius: 5px; border: 1px solid #333; margin-bottom: 8px; position: relative; }
+        .btn-remove { position: absolute; top: 5px; right: 5px; background: #ff4444; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem; }
+        
+        .btn-add { width: 100%; padding: 8px; background: #222; border: 1px dashed #666; color: #888; cursor: pointer; transition: 0.2s; }
+        .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-download { width: 100%; padding: 15px; background: linear-gradient(90deg, #00e5ff, #00ff88); color: #000; border: none; border-radius: 5px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; }
+        .btn-download:hover { opacity: 0.9; }
+
+        iframe { width: 100%; height: 100%; border: none; background: #000; box-shadow: 0 0 50px rgba(0,0,0,0.5); min-height: 90vh; }
+    </style>
+</head>
+<body>
+
+    <div class="editor-panel">
+        
+        <div class="ai-section">
+            <div class="ai-header">
+                <span class="ai-title"><i class="fas fa-robot"></i> AI Auto-Fill</span>
+                <button class="btn-copy" onclick="copyPrompt()">
+                    <i class="fas fa-copy"></i> Copy Prompt
+                </button>
+            </div>
+            <textarea id="aiInput" class="ai-input" placeholder="Paste the JSON code from AI here..."></textarea>
+            <button class="btn-import" onclick="importAI()">Auto-Fill Form</button>
+        </div>
+
+        <label for="loadInput" class="upload-box main-upload">
+            <i class="fas fa-file-import"></i>
+            <p>Upload Existing HTML File to Edit</p>
+        </label>
+        <input type="file" id="loadInput" accept=".html" onchange="loadHTMLFile(this)">
+
+        <h2 style="margin:0; color:white;">Generator v17 <span style="font-size:0.8rem; color:#888;">(Color Fix)</span></h2>
+
+        <div>
+            <h3>🎨 Theme</h3>
+            <div class="row">
+                <div><label>Primary Color</label><input type="color" id="primaryColor" value="#ff004f" oninput="updatePreview()"></div>
+                <div><label>Background</label><input type="color" id="bgColor" value="#050002" oninput="updatePreview()"></div>
+            </div>
+        </div>
+
+        <div>
+            <h3>📝 Header Info</h3>
+            <label>Logo / Brand Name</label><input type="text" id="logoText" value="Brand Name" oninput="updatePreview()">
+            <label>Main Headline</label><textarea id="headline" rows="2" oninput="updatePreview()">Headline Goes Here</textarea>
+            <label>Subtitle</label><textarea id="subtext" rows="2" oninput="updatePreview()">Subtitle text goes here.</textarea>
+        </div>
+
+        <div class="item-card" style="border-left: 3px solid #00ff88;">
+            <h3>🖼️ Offer Image</h3>
+            <label>Option 1: Image URL</label>
+            <input type="text" id="imgUrl" placeholder="https://..." oninput="updatePreview()">
+            <p style="text-align:center; font-size:0.7rem; color:#666; margin:5px 0;">OR</p>
+            <label for="imgUpload" class="upload-box">
+                <i class="fas fa-upload"></i>
+                <p>Upload Image from PC</p>
+            </label>
+            <input type="file" id="imgUpload" accept="image/*" onchange="handleImageUpload(this)">
+            <button onclick="clearImage()" style="width:100%; background:#333; color:#aaa; border:none; padding:5px; font-size:0.7rem; cursor:pointer;">Clear Image</button>
+        </div>
+
+        <div class="item-card" style="border-left: 3px solid var(--accent);">
+            <h3>ℹ️ Auto-Generate 'About'</h3>
+            <label>Offer Type</label><input type="text" id="aboutType" value="PDF Guide" oninput="updatePreview()">
+            <label>Target Audience</label><input type="text" id="aboutAudience" value="Creators" oninput="updatePreview()">
+            <label>Main Benefit</label><input type="text" id="aboutBenefit" value="Success" oninput="updatePreview()">
+        </div>
+
+        <div>
+            <h3>🔘 Buttons</h3>
+            <label>Main Button Text</label><input type="text" id="btn1Text" value="Claim Offer" oninput="updatePreview()">
+            <label>Main Link</label><input type="text" id="btn1Link" value="#" oninput="updatePreview()">
+            <div style="display:flex; align-items:center; margin-top:10px; background:#222; padding:5px; border-radius:4px;">
+                <input type="checkbox" id="showBtn2" checked onchange="updatePreview()">
+                <label style="margin:0; cursor:pointer;" for="showBtn2">Show Secondary Button?</label>
+            </div>
+            <div id="btn2Container" style="margin-top:5px;">
+                <label>Secondary Text</label><input type="text" id="btn2Text" value="Read More" oninput="updatePreview()">
+            </div>
+        </div>
+
+        <div>
+            <h3>⭐ Reviews</h3>
+            <div id="reviewsList"></div>
+            <button class="btn-add" onclick="addReview()">+ Add Review</button>
+        </div>
+
+        <div>
+            <h3>❓ FAQs</h3>
+            <div id="faqList"></div>
+            <button class="btn-add" onclick="addFaq()">+ Add FAQ</button>
+        </div>
+
+        <button class="btn-download" onclick="downloadPage()">Download HTML</button>
+    </div>
+
+    <div class="preview-panel">
+        <iframe id="frame"></iframe>
+    </div>
+
+    <script>
+        let uploadedImageBase64 = "";
+
+        // --- NEW: COPY PROMPT ---
+        function copyPrompt() {
+            const prompt = `Act as a JSON Generator for a Landing Page.
+I have an offer. Please generate a valid JSON object based on the details below.
+
+OFFER DETAILS: [INSERT YOUR OFFER HERE]
+
+REQUIREMENTS:
+1. Generate 3 Reviews.
+2. Generate 4 FAQs.
+3. Output ONLY the JSON code block.
+
+Use this EXACT JSON structure:
+{
+  "primary": "#ff004f",
+  "bg": "#050002",
+  "logo": "Brand Name",
+  "headline": "Catchy Headline",
+  "subtext": "Subtitle text",
+  "heroImage": "https://placehold.co/600x400",
+  "about": { "type": "Guide", "audience": "Beginners", "benefit": "Growth" },
+  "btn1": { "text": "Get Access", "link": "#" },
+  "btn2": { "show": true, "text": "Read More" },
+  "reviews": [ { "name": "User", "text": "Review", "stars": 5 } ],
+  "faqs": [ { "q": "Question?", "a": "Answer." } ]
+}`;
+            navigator.clipboard.writeText(prompt);
+            alert("📋 Prompt Copied! Paste it in ChatGPT, replace details, and copy the JSON back here.");
+        }
+
+        // --- NEW: AI IMPORT ---
+        function importAI() {
+            const jsonText = document.getElementById('aiInput').value.trim();
+            if(!jsonText) { alert("Please paste JSON code first."); return; }
+            
+            try {
+                let cleanJson = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+                const data = JSON.parse(cleanJson);
+                applyConfig(data);
+                alert("✨ Magic! Auto-filled successfully.");
+            } catch (e) {
+                alert("❌ Error: Invalid JSON. Please copy ONLY the code block from AI.");
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageBase64 = e.target.result;
+                    document.getElementById('imgUrl').value = ""; 
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearImage() {
+            uploadedImageBase64 = "";
+            document.getElementById('imgUrl').value = "";
+            document.getElementById('imgUpload').value = "";
+            updatePreview();
+        }
+
+        function addReview(name="User", text="Great offer!", stars=5) {
+            const div = document.createElement('div');
+            div.className = 'item-card review-item';
+            div.innerHTML = `
+                <button class="btn-remove" onclick="this.parentElement.remove(); updatePreview()">X</button>
+                <label>Name</label><input type="text" class="r-name" value="${name}" oninput="updatePreview()">
+                <label>Comment</label><input type="text" class="r-text" value="${text}" oninput="updatePreview()">
+                <label>Stars</label><input type="number" class="r-stars" value="${stars}" min="1" max="5" oninput="updatePreview()">
+            `;
+            document.getElementById('reviewsList').appendChild(div);
+            updatePreview();
+        }
+
+        function addFaq(q="Question?", a="Answer.") {
+            const div = document.createElement('div');
+            div.className = 'item-card faq-item';
+            div.innerHTML = `
+                <button class="btn-remove" onclick="this.parentElement.remove(); updatePreview()">X</button>
+                <label>Q</label><input type="text" class="f-q" value="${q}" oninput="updatePreview()">
+                <label>A</label><textarea class="f-a" rows="2" oninput="updatePreview()">${a}</textarea>
+            `;
+            document.getElementById('faqList').appendChild(div);
+            updatePreview();
+        }
+
+        function loadHTMLFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const configScript = doc.getElementById('page-config');
+                if (configScript) {
+                    try {
+                        const config = JSON.parse(configScript.textContent);
+                        applyConfig(config);
+                        alert("File loaded successfully!");
+                    } catch (err) { alert("Error parsing file."); }
+                } else { alert("Invalid file format."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function applyConfig(data) {
+            document.getElementById('primaryColor').value = data.primary || '#ff004f';
+            document.getElementById('bgColor').value = data.bg || '#050002';
+            document.getElementById('logoText').value = data.logo || '';
+            document.getElementById('headline').value = data.headline || '';
+            document.getElementById('subtext').value = data.subtext || '';
+            
+            if(data.heroImage && data.heroImage.startsWith('data:')) {
+                uploadedImageBase64 = data.heroImage;
+                document.getElementById('imgUrl').value = "";
+            } else {
+                uploadedImageBase64 = "";
+                document.getElementById('imgUrl').value = data.heroImage || "";
+            }
+
+            if (data.about) {
+                document.getElementById('aboutType').value = data.about.type || '';
+                document.getElementById('aboutAudience').value = data.about.audience || '';
+                document.getElementById('aboutBenefit').value = data.about.benefit || '';
+            }
+            if (data.btn1) {
+                document.getElementById('btn1Text').value = data.btn1.text || '';
+                document.getElementById('btn1Link').value = data.btn1.link || '';
+            }
+            if (data.btn2) {
+                document.getElementById('showBtn2').checked = data.btn2.show;
+                document.getElementById('btn2Text').value = data.btn2.text || '';
+            }
+
+            document.getElementById('reviewsList').innerHTML = '';
+            document.getElementById('faqList').innerHTML = '';
+            
+            if(data.reviews && Array.isArray(data.reviews)) {
+                data.reviews.forEach(r => addReview(r.name, r.text, r.stars));
+            }
+            if(data.faqs && Array.isArray(data.faqs)) {
+                data.faqs.forEach(f => addFaq(f.q, f.a));
+            }
+
+            updatePreview();
+        }
+
+        // Helper to convert hex to rgba
+        function hexToRgba(hex, alpha) {
+            let r = parseInt(hex.slice(1, 3), 16),
+                g = parseInt(hex.slice(3, 5), 16),
+                b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function generateHTML() {
+            const finalImgSrc = uploadedImageBase64 || document.getElementById('imgUrl').value;
+            const config = {
+                primary: document.getElementById('primaryColor').value,
+                bg: document.getElementById('bgColor').value,
+                logo: document.getElementById('logoText').value,
+                headline: document.getElementById('headline').value,
+                subtext: document.getElementById('subtext').value,
+                heroImage: finalImgSrc,
+                about: {
+                    type: document.getElementById('aboutType').value,
+                    audience: document.getElementById('aboutAudience').value,
+                    benefit: document.getElementById('aboutBenefit').value
+                },
+                btn1: { text: document.getElementById('btn1Text').value, link: document.getElementById('btn1Link').value },
+                btn2: { show: document.getElementById('showBtn2').checked, text: document.getElementById('btn2Text').value },
+                reviews: [],
+                faqs: []
+            };
+
+            document.querySelectorAll('#reviewsList .item-card').forEach(item => config.reviews.push({
+                name: item.querySelector('.r-name').value,
+                text: item.querySelector('.r-text').value,
+                stars: item.querySelector('.r-stars').value
+            }));
+            document.querySelectorAll('#faqList .item-card').forEach(item => config.faqs.push({
+                q: item.querySelector('.f-q').value,
+                a: item.querySelector('.f-a').value
+            }));
+
+            // Create Dynamic RGBA color for the glow
+            const glowColor = hexToRgba(config.primary, 0.2); // 20% opacity of selected color
+
+            const imgHTML = finalImgSrc ? `<img src="${finalImgSrc}" class="hero-img" alt="Offer Image">` : '';
+            const aboutText = `We are dedicated to providing the best <strong>${config.about.type}</strong> resources for <strong>${config.about.audience}</strong>. Our mission is to help you unlock <strong>${config.about.benefit}</strong> potential quickly and securely. All our methods are tested and verified.`;
+
+            let reviewsHTML = '';
+            if (config.reviews.length > 0) {
+                let cards = config.reviews.map(r => `
+                    <div class="review-card">
+                        <div class="stars" style="color:#ffd700; margin-bottom:5px;">${'★'.repeat(r.stars)}</div>
+                        <p class="r-text">"${r.text}"</p>
+                        <div class="r-name">- ${r.name} <span style="color:${config.primary}; font-size:0.7rem;">✔ Verified</span></div>
+                    </div>`).join('');
+                reviewsHTML = `<div class="section-container"><h2>Customer Feedback</h2><div class="reviews-grid">${cards}</div></div>`;
+            }
+
+            let faqHTML = config.faqs.map(f => `
+                <details class="faq-item">
+                    <summary class="faq-question"><span>${f.q}</span><span class="arrow"></span></summary>
+                    <div class="faq-answer">${f.a}</div>
+                </details>`).join('');
+
+            const btn2HTML = config.btn2.show ? `<a href="#" class="btn btn-outline">${config.btn2.text}</a>` : '';
+            const jsonString = JSON.stringify(config).replace(/<\/script>/g, '<\\/script>');
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${config.logo}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: ${config.primary}; --bg-dark: ${config.bg}; --font-head: 'Poppins', sans-serif; --font-body: 'Lato', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: var(--bg-dark); 
+            color: white; 
+            font-family: var(--font-body); 
+            min-height: 100vh; 
+            /* DYNAMIC COLOR GLOW HERE */
+            background: radial-gradient(circle at 10% 20%, ${glowColor} 0%, transparent 40%), linear-gradient(to right, var(--bg-dark), #000); 
+            overflow-x: hidden; 
+        }
+        .wrapper { max-width: 1100px; margin: 0 auto; padding: 0 20px; position: relative; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 30px 0; }
+        .logo { font-family: var(--font-head); font-weight: 700; color: var(--primary); font-size: 1.2rem; }
+        .nav-btn { cursor: pointer; background: var(--primary); padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
+        .nav-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .hero { text-align: center; padding: 60px 0; }
+        h1 { font-family: var(--font-head); font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
+        p.sub { color: #ccc; font-size: 1rem; max-width: 700px; margin: 0 auto 40px; font-weight: 300; line-height: 1.6; }
+        .hero-img { max-width: 100%; height: auto; max-height: 400px; border-radius: 20px; margin-bottom: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-row { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 2; }
+        .glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 100px; background: var(--primary); filter: blur(60px); opacity: 0.4; z-index: 1; pointer-events: none; }
+        .btn { padding: 15px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; font-family: var(--font-head); transition: 0.3s; z-index: 2; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn-outline { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        .section-container { margin: 80px 0; text-align: center; }
+        h2 { font-family: var(--font-head); font-size: 1.8rem; margin-bottom: 40px; text-align: center; }
+        .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; text-align: left; }
+        .review-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border-left: 3px solid var(--primary); }
+        .r-text { font-style: italic; font-size: 0.9rem; color: #ddd; margin-bottom: 10px; }
+        .r-name { font-weight: 700; font-size: 0.85rem; }
+        .faq-section { max-width: 800px; margin: 0 auto 80px; }
+        .faq-item { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 0; }
+        .faq-question { display: flex; justify-content: space-between; cursor: pointer; font-weight: 600; font-family: var(--font-head); list-style: none; font-size: 1.1rem; }
+        .faq-question::-webkit-details-marker { display: none; }
+        .arrow { border: solid var(--primary); border-width: 0 2px 2px 0; display: inline-block; padding: 4px; transform: rotate(45deg); transition: 0.3s; margin-top: 5px; }
+        details[open] .arrow { transform: rotate(225deg); }
+        .faq-answer { margin-top: 10px; color: #aaa; line-height: 1.6; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: #111; padding: 40px; border-radius: 20px; max-width: 500px; border: 1px solid var(--primary); text-align: center; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 1.5rem; color: #666; }
+        footer { text-align: center; opacity: 0.6; padding: 20px 0; font-size: 0.8rem; }
+
+        /* FIXED MOBILE SPACING */
+        @media (max-width: 600px) {
+            .hero { padding-bottom: 20px !important; }
+            .section-container { margin-top: 20px !important; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <nav class="navbar">
+            <div class="logo">${config.logo}</div>
+            <div class="nav-btn" onclick="document.getElementById('aboutModal').style.display='flex'">About Us</div>
+        </nav>
+        <div class="hero">
+            <h1>${config.headline.replace(/\n/g, '<br>')}</h1>
+            <p class="sub">${config.subtext}</p>
+            ${imgHTML}
+            <div class="btn-row">
+                <div class="glow"></div>
+                <a href="${config.btn1.link}" class="btn btn-primary">${config.btn1.text}</a>
+                ${btn2HTML}
+            </div>
+        </div>
+        ${reviewsHTML}
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            ${faqHTML}
+        </div>
+        <footer>&copy; 2026 ${config.logo}.</footer>
+    </div>
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="document.getElementById('aboutModal').style.display='none'">&times;</span>
+            <h2 style="color:var(--primary); margin-bottom:20px;">About Us</h2>
+            <p style="color:#ccc; line-height:1.6;">${aboutText}</p>
+        </div>
+    </div>
+    <script>window.onclick = function(e) { if(e.target == document.getElementById('aboutModal')) document.getElementById('aboutModal').style.display="none"; }<\/script>
+    <script id="page-config" type="application/json">${jsonString}<\/script>
+</body>
+</html>`;
+        }
+
+        function updatePreview() {
+            const frame = document.getElementById('frame');
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            doc.open(); doc.write(generateHTML()); doc.close();
+        }
+
+        function downloadPage() {
+            const blob = new Blob([generateHTML()], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'landing_page_v17.html';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        // INIT
+        window.onload = function() {
+            addFaq("Is this method safe?", "Yes, tested and verified.");
+            updatePreview();
+        };
+    </script>
+</body>
+</html>
