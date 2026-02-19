@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Page Generator v24 (Button FX & Cloaking)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- EDITOR UI STYLES --- */
+        :root { --panel-bg: #121212; --text-main: #e0e0e0; --accent: #00e5ff; --border: #333; --ai-color: #d800ff; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; height: 100vh; display: flex; overflow: hidden; }
+        .editor-panel { width: 440px; background: var(--panel-bg); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; color: var(--text-main); }
+        .preview-panel { flex: 1; background: #000; padding: 0; display: flex; justify-content: center; align-items: flex-start; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 20px 20px; overflow-y: hidden; position: relative;}
+        
+        /* Mobile Frame Mockup */
+        .mobile-frame { width: 375px; height: 812px; border: 12px solid #333; border-radius: 30px; overflow: hidden; background: #000; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-top: 20px; position: relative; }
+        .mobile-frame iframe { width: 100%; height: 100%; border: none; background: transparent; }
+
+        /* EDITOR COMPONENTS */
+        .ai-section { border: 2px dashed var(--ai-color); background: #1a0520; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ai-title { color: var(--ai-color); font-weight: bold; font-size: 0.9rem; }
+        .btn-copy { background: #333; color: white; border: 1px solid #555; padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        textarea.ai-input { width: 100%; height: 60px; background: #000; border: 1px solid #555; color: #0f0; font-family: monospace; font-size: 0.7rem; padding: 5px; border-radius: 4px; resize: vertical; margin-bottom: 5px; }
+        .btn-import { width: 100%; background: var(--ai-color); color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        .upload-box { background: #1a1a1a; border: 2px dashed #444; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 5px; color: #888; display:block; }
+        .upload-box:hover { background: #222; border-color: var(--accent); color: var(--accent); }
+        input[type="file"] { display: none; }
+
+        h3 { margin: 0 0 10px 0; font-size: 0.8rem; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 5px; letter-spacing: 1px; }
+        label { font-size: 0.75rem; color: #aaa; display: block; margin-bottom: 4px; font-weight: 600; }
+        input[type="text"], textarea, select, input[type="number"] { width: 100%; background: #222; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; font-family: sans-serif; }
+        input[type="color"] { width: 100%; height: 35px; border: none; padding: 0; background: none; cursor: pointer; }
+        input[type="range"] { width: 100%; margin-bottom: 10px; accent-color: var(--accent); }
+        input[type="checkbox"] { width: auto; margin-right: 10px; cursor: pointer; }
+        .row { display: flex; gap: 10px; } .row > div { flex: 1; }
+
+        .item-card { background: #1e1e1e; padding: 10px; border-radius: 5px; border: 1px solid #333; margin-bottom: 8px; position: relative; }
+        .btn-remove { position: absolute; top: 5px; right: 5px; background: #ff4444; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem; }
+        .btn-add { width: 100%; padding: 8px; background: #222; border: 1px dashed #666; color: #888; cursor: pointer; transition: 0.2s; margin-bottom:10px; }
+        .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-download { width: 100%; padding: 15px; background: linear-gradient(90deg, #00e5ff, #00ff88); color: #000; border: none; border-radius: 5px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; }
+        
+        .logo-preview-mini { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 4px; vertical-align: middle; margin-right: 10px;}
+    </style>
+</head>
+<body>
+
+    <div class="editor-panel">
+        
+        <div class="ai-section">
+            <div class="ai-header">
+                <span class="ai-title"><i class="fas fa-robot"></i> AI Auto-Fill (Bridge)</span>
+                <button class="btn-copy" onclick="copyPrompt()"><i class="fas fa-copy"></i> Copy Prompt</button>
+            </div>
+            <textarea id="aiInput" class="ai-input" placeholder="Paste JSON code here..."></textarea>
+            <button class="btn-import" onclick="importAI()">Auto-Fill Form</button>
+        </div>
+
+        <label for="loadInput" class="upload-box" style="margin-bottom: 20px; padding: 15px; border-color: var(--accent); color: var(--accent);">
+            <i class="fas fa-file-import"></i><p>Upload Existing HTML File to Edit</p>
+        </label>
+        <input type="file" id="loadInput" accept=".html" onchange="loadHTMLFile(this)">
+
+        <h2 style="margin:0; color:white;">BridgeGen v24 <span style="font-size:0.8rem; color:var(--accent);">(Hover FX & Cloak)</span></h2>
+
+        <div>
+            <h3>🎨 Theme & Typography</h3>
+            <div class="row">
+                <div><label>Primary</label><input type="color" id="primaryColor" value="#00e5ff" oninput="updatePreview()"></div>
+                <div><label>Background</label><input type="color" id="bgColor" value="#0a0a0a" oninput="updatePreview()"></div>
+            </div>
+            <div class="row" style="margin-top:5px;">
+                <div><label>Main Text Color</label><input type="color" id="textColor" value="#ffffff" oninput="updatePreview()"></div>
+                <div><label>Button Text Color</label><input type="color" id="btnTextColor" value="#000000" oninput="updatePreview()"></div>
+            </div>
+            <div style="display:flex; align-items:center; margin-top:5px; background:#222; padding:8px; border-radius:4px; margin-bottom: 10px;">
+                 <input type="checkbox" id="solidBg" onchange="updatePreview()">
+                 <label style="margin:0; cursor:pointer;" for="solidBg">Use Solid Background</label>
+            </div>
+            
+            <label>Brand Font Size (<span id="logoSizeVal">1.5</span>rem)</label>
+            <input type="range" id="logoSize" min="1" max="3" step="0.1" value="1.5" oninput="document.getElementById('logoSizeVal').innerText=this.value; updatePreview()">
+            
+            <label>Headline Font Size (<span id="headSizeVal">2.2</span>rem)</label>
+            <input type="range" id="headSize" min="1.5" max="3.5" step="0.1" value="2.2" oninput="document.getElementById('headSizeVal').innerText=this.value; updatePreview()">
+        </div>
+
+        <div>
+            <h3>🏆 Top Logos (As Seen On)</h3>
+            <label>Logo Size (<span id="topLogoSizeVal">24</span>px)</label>
+            <input type="range" id="topLogoSize" min="10" max="60" step="1" value="24" oninput="document.getElementById('topLogoSizeVal').innerText=this.value; updatePreview()">
+            <div id="topLogosList"></div>
+            <label class="upload-box" style="padding: 5px;">
+                <i class="fas fa-plus-circle" style="font-size: 0.8rem;"></i> <p style="display:inline;">Upload Logo</p>
+                <input type="file" accept="image/*" onchange="addTopLogo(this)">
+            </label>
+        </div>
+
+        <div>
+            <h3>📝 Main Header</h3>
+            <label>Brand Name</label><input type="text" id="logoText" value="OfferBrand" oninput="updatePreview()">
+            <label>Headline</label><textarea id="headline" rows="2" oninput="updatePreview()">Special Limited-Time Bridge Offer!</textarea>
+            
+            <div class="item-card" style="border-left: 3px solid var(--accent); margin-top: 10px;">
+                <label>Hero Image URL</label>
+                <input type="text" id="imgUrl" placeholder="Image URL (optional)" oninput="updatePreview()" style="margin-bottom:5px;">
+                <label for="imgUpload" class="upload-box" style="margin-bottom:0; padding:5px;"><i class="fas fa-upload"></i> Upload Image</label>
+                <input type="file" id="imgUpload" accept="image/*" onchange="handleImageUpload(this)">
+                <button onclick="clearImage()" style="width:100%; background:#333; color:#aaa; border:none; padding:6px; font-size:0.75rem; border-radius:4px; cursor:pointer; margin-top:5px;">Clear Image</button>
+            </div>
+        </div>
+
+        <div>
+            <h3>📋 Steps to Claim</h3>
+            <div id="stepsList"></div>
+            <button class="btn-add" onclick="addStep()">+ Add Step</button>
+        </div>
+
+        <div>
+            <h3>🔘 Call to Action</h3>
+            <label>Main Button Text</label><input type="text" id="btn1Text" value="Continue to Offer" oninput="updatePreview()">
+            <label>Main Link (CPA Link)</label><input type="text" id="btn1Link" value="#" oninput="updatePreview()">
+            
+            <div style="background:#222; padding:10px; border-radius:4px; margin-top:5px; border-left: 3px solid #ff4444;">
+                <div style="display:flex; align-items:center; margin-bottom: 5px;">
+                    <input type="checkbox" id="openNewTab" checked onchange="updatePreview()">
+                    <label style="margin:0; cursor:pointer;" for="openNewTab">Open in New Tab</label>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <input type="checkbox" id="hideLink" checked onchange="updatePreview()">
+                    <label style="margin:0; cursor:pointer;" for="hideLink">Hide CPA Link on Hover (Cloak)</label>
+                </div>
+            </div>
+            
+            <div style="display:flex; align-items:center; margin-top:10px; background:#222; padding:5px; border-radius:4px;">
+                <input type="checkbox" id="showUrgency" checked onchange="updatePreview()">
+                <label style="margin:0; cursor:pointer;" for="showUrgency">Show Urgency Text?</label>
+            </div>
+            <input type="text" id="urgencyText" value="🔥 Hurry up before it's too late!" oninput="updatePreview()" style="margin-top:5px;">
+        </div>
+
+        <div class="item-card" style="border-left: 3px solid #00b67a; display:block;">
+            <h3>✅ Trustpilot Widget</h3>
+            
+            <label>Trustpilot Logo (Upload Custom Image)</label>
+            <label class="upload-box" style="padding: 5px; margin-bottom:10px;">
+                <i class="fas fa-upload" style="font-size: 0.8rem;"></i> <p style="display:inline;">Upload Custom TP Logo</p>
+                <input type="file" accept="image/*" onchange="handleTpLogoUpload(this)">
+            </label>
+
+            <div class="row">
+                 <div><label>Score (e.g. 4.9)</label><input type="text" id="tpScore" value="4.9" oninput="updatePreview()"></div>
+                 <div><label>Count (e.g. 1,250)</label><input type="text" id="tpCount" value="1,250" oninput="updatePreview()"></div>
+            </div>
+        </div>
+
+        <div>
+            <h3>❓ FAQs</h3>
+            <div id="faqList"></div>
+            <button class="btn-add" onclick="addFaq()">+ Add FAQ</button>
+        </div>
+
+        <button class="btn-download" onclick="downloadPage()">Download HTML</button>
+    </div>
+
+    <div class="preview-panel">
+        <div class="mobile-frame">
+             <iframe id="frame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImageBase64 = "";
+        let topLogoData = []; 
+        let customTpLogoBase64 = "";
+
+        function copyPrompt() {
+            const prompt = `Act as a JSON Generator for a Bridge Page. Generate a valid JSON object.
+OFFER DETAILS: [INSERT OFFER HERE]
+
+REQUIREMENTS:
+1. Generate exactly 3 Steps to claim the offer.
+2. Generate exactly 3 FAQs.
+3. Suggest appropriate Hex colors for primary, bg, textColor, and btnTextColor.
+4. Output ONLY the JSON code block.
+
+JSON STRUCTURE:
+{
+  "primary": "#00e5ff", "bg": "#ffffff", "textColor": "#000000", "btnTextColor": "#ffffff", "solidBg": true,
+  "logoSize": "1.5", "headSize": "2.2", "topLogoSize": "24",
+  "logo": "Brand", "headline": "Headline",
+  "heroImage": "",
+  "topLogos": [], 
+  "steps": ["Click the button below", "Enter your email", "Enjoy your reward!"],
+  "btn1": { "text": "Continue", "link": "#", "newTab": true, "hideLink": true },
+  "urgency": { "show": true, "text": "🔥 Hurry up before it's too late!" },
+  "trustpilot": { "score": "4.9", "count": "1,500" },
+  "faqs": [ { "q": "Q?", "a": "A." } ]
+}`;
+            navigator.clipboard.writeText(prompt);
+            alert("📋 Prompt Copied! Paste in AI.");
+        }
+
+        function importAI() {
+            const jsonText = document.getElementById('aiInput').value.trim();
+            if(!jsonText) return alert("Paste JSON code first.");
+            try {
+                let cleanJson = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+                applyConfig(JSON.parse(cleanJson));
+                alert("✨ Auto-filled successfully.");
+            } catch (e) { alert("❌ Error: Invalid JSON."); }
+        }
+
+        function handleImageUpload(input) {
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { uploadedImageBase64 = e.target.result; document.getElementById('imgUrl').value = ""; updatePreview(); };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearImage() {
+            uploadedImageBase64 = ""; document.getElementById('imgUrl').value = ""; document.getElementById('imgUpload').value = ""; updatePreview();
+        }
+
+        function handleTpLogoUpload(input) {
+             if(input.files[0]){
+                 const reader = new FileReader();
+                 reader.onload = e => { customTpLogoBase64 = e.target.result; updatePreview(); input.value = ''; }
+                 reader.readAsDataURL(input.files[0]);
+             }
+        }
+
+        function addTopLogo(input) {
+             if(input.files[0]){
+                 const reader = new FileReader();
+                 reader.onload = e => { topLogoData.push(e.target.result); renderTopLogosList(); updatePreview(); input.value = ''; }
+                 reader.readAsDataURL(input.files[0]);
+             }
+        }
+
+        function renderTopLogosList(){
+            const container = document.getElementById('topLogosList');
+            container.innerHTML = '';
+            topLogoData.forEach((src, index) => {
+                const div = document.createElement('div');
+                div.className = 'item-card'; div.style.display = 'flex'; div.style.alignItems = 'center';
+                div.innerHTML = `<img src="${src}" class="logo-preview-mini"><span style="flex:1; font-size:0.8rem;">Logo ${index+1}</span><button class="btn-remove" style="position:static;" onclick="removeTopLogo(${index})">X</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function removeTopLogo(index){ topLogoData.splice(index, 1); renderTopLogosList(); updatePreview(); }
+
+        function addStep(text="New Step") {
+            const div = document.createElement('div');
+            div.className = 'item-card step-item';
+            div.innerHTML = `<button class="btn-remove" onclick="this.parentElement.remove(); updatePreview()">X</button><input type="text" class="s-text" value="${text}" oninput="updatePreview()">`;
+            document.getElementById('stepsList').appendChild(div);
+            updatePreview();
+        }
+
+        function addFaq(q="Question?", a="Answer.") {
+            const div = document.createElement('div');
+            div.className = 'item-card faq-item';
+            div.innerHTML = `<button class="btn-remove" onclick="this.parentElement.remove(); updatePreview()">X</button><input type="text" class="f-q" value="${q}" oninput="updatePreview()"><textarea class="f-a" rows="2" oninput="updatePreview()">${a}</textarea>`;
+            document.getElementById('faqList').appendChild(div);
+            updatePreview();
+        }
+
+        function loadHTMLFile(input) {
+            if (!input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const doc = new DOMParser().parseFromString(e.target.result, 'text/html');
+                const script = doc.getElementById('page-config');
+                if (script) { applyConfig(JSON.parse(script.textContent)); alert("File loaded!"); } 
+                else { alert("Invalid file format."); }
+            };
+            reader.readAsText(input.files[0]);
+        }
+
+        function applyConfig(data) {
+            document.getElementById('primaryColor').value = data.primary || '#00e5ff';
+            document.getElementById('bgColor').value = data.bg || '#0a0a0a';
+            document.getElementById('textColor').value = data.textColor || '#ffffff';
+            document.getElementById('btnTextColor').value = data.btnTextColor || '#000000'; 
+            document.getElementById('solidBg').checked = data.solidBg || false;
+            
+            document.getElementById('logoSize').value = data.logoSize || '1.5';
+            document.getElementById('logoSizeVal').innerText = data.logoSize || '1.5';
+            document.getElementById('headSize').value = data.headSize || '2.2';
+            document.getElementById('headSizeVal').innerText = data.headSize || '2.2';
+            document.getElementById('topLogoSize').value = data.topLogoSize || '24';
+            document.getElementById('topLogoSizeVal').innerText = data.topLogoSize || '24';
+
+            document.getElementById('logoText').value = data.logo || '';
+            document.getElementById('headline').value = data.headline || '';
+            
+            uploadedImageBase64 = data.heroImage && data.heroImage.startsWith('data:') ? data.heroImage : "";
+            document.getElementById('imgUrl').value = data.heroImage && !data.heroImage.startsWith('data:') ? data.heroImage : "";
+
+            customTpLogoBase64 = data.customTpLogoBase64 || "";
+
+            topLogoData = data.topLogos || [];
+            renderTopLogosList();
+
+            if(data.btn1) { 
+                document.getElementById('btn1Text').value = data.btn1.text; 
+                document.getElementById('btn1Link').value = data.btn1.link; 
+                document.getElementById('openNewTab').checked = data.btn1.newTab !== undefined ? data.btn1.newTab : true;
+                document.getElementById('hideLink').checked = data.btn1.hideLink !== undefined ? data.btn1.hideLink : true;
+            }
+            if(data.urgency) { document.getElementById('showUrgency').checked = data.urgency.show; document.getElementById('urgencyText').value = data.urgency.text; }
+            if(data.trustpilot) { document.getElementById('tpScore').value = data.trustpilot.score; document.getElementById('tpCount').value = data.trustpilot.count; }
+
+            document.getElementById('stepsList').innerHTML = '';
+            if(data.steps) data.steps.forEach(s => addStep(s));
+
+            document.getElementById('faqList').innerHTML = '';
+            if(data.faqs) data.faqs.forEach(f => addFaq(f.q, f.a));
+
+            updatePreview();
+        }
+
+        function hexToRgba(hex, alpha) {
+            hex = hex.replace('#', '');
+            let r = parseInt(hex.substring(0, 2), 16), g = parseInt(hex.substring(2, 4), 16), b = parseInt(hex.substring(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function generateHTML() {
+            const finalImgSrc = uploadedImageBase64 || document.getElementById('imgUrl').value;
+            const config = {
+                primary: document.getElementById('primaryColor').value,
+                bg: document.getElementById('bgColor').value,
+                textColor: document.getElementById('textColor').value,
+                btnTextColor: document.getElementById('btnTextColor').value,
+                solidBg: document.getElementById('solidBg').checked,
+                logoSize: document.getElementById('logoSize').value,
+                headSize: document.getElementById('headSize').value,
+                topLogoSize: document.getElementById('topLogoSize').value,
+                logo: document.getElementById('logoText').value,
+                headline: document.getElementById('headline').value,
+                heroImage: finalImgSrc,
+                topLogos: topLogoData,
+                customTpLogoBase64: customTpLogoBase64,
+                btn1: { 
+                    text: document.getElementById('btn1Text').value, 
+                    link: document.getElementById('btn1Link').value,
+                    newTab: document.getElementById('openNewTab').checked,
+                    hideLink: document.getElementById('hideLink').checked
+                },
+                urgency: { show: document.getElementById('showUrgency').checked, text: document.getElementById('urgencyText').value },
+                trustpilot: { score: document.getElementById('tpScore').value, count: document.getElementById('tpCount').value },
+                steps: [], faqs: []
+            };
+
+            document.querySelectorAll('#stepsList .item-card').forEach(item => config.steps.push(item.querySelector('.s-text').value));
+            document.querySelectorAll('#faqList .item-card').forEach(item => config.faqs.push({ q: item.querySelector('.f-q').value, a: item.querySelector('.f-a').value }));
+
+            // LINK LOGIC (Cloaking & Target)
+            let finalHref = config.btn1.link;
+            let finalTarget = config.btn1.newTab ? ' target="_blank"' : '';
+            let finalOnclick = '';
+
+            if (config.btn1.hideLink) {
+                finalHref = 'javascript:void(0);'; // Hides URL in hover status bar
+                if (config.btn1.newTab) {
+                    finalOnclick = ` onclick="window.open('${config.btn1.link}', '_blank'); return false;"`;
+                    finalTarget = ''; // handled by JS
+                } else {
+                    finalOnclick = ` onclick="window.location.href='${config.btn1.link}'; return false;"`;
+                }
+            }
+
+            // HTML Parts
+            let topLogosHTML = '';
+            if(config.topLogos.length > 0){
+                topLogosHTML = `<div class="top-logos-bar">${config.topLogos.map(src => `<img src="${src}">`).join('')}</div>`;
+            }
+
+            const imgHTML = finalImgSrc ? `<img src="${finalImgSrc}" class="hero-img">` : '';
+
+            let stepsHTML = '';
+            if(config.steps.length > 0){
+                let sHTML = config.steps.map((s, i) => `
+                    <div class="step-card">
+                        <div class="step-num">${i+1}</div>
+                        <div class="step-text">${s}</div>
+                    </div>`).join('');
+                stepsHTML = `<div class="steps-container">${sHTML}</div>`;
+            }
+
+            const urgencyHTML = config.urgency.show ? `<div class="urgency-text">${config.urgency.text}</div>` : '';
+
+            const tpStars = `<div class="tp-star"><svg viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg></div>`.repeat(5);
+            const defaultTpLogoSVG = `<svg viewBox="0 0 216 53" fill="#191919" style="height: 28px; margin: 0 auto 15px; display: block;"><path d="M152.02 12.72L149.34 21h-7.7v23.2h-6.23V21h-7.71v-8.28h24.32zM170.83 24.32c0-3.32-2.18-5.46-5.46-5.46s-5.46 2.14-5.46 5.46c0 3.19 1.94 4.8 5.66 5.88l1.7.49c1.9.54 2.87 1.27 2.87 2.68 0 1.51-1.32 2.58-3.36 2.58-1.95 0-3.41-1.03-3.6-2.68h-5.95c.29 4.38 3.84 7.6 9.55 7.6 5.31 0 9.2-2.92 9.2-7.5 0-3.41-2.14-5.26-5.55-6.24l-1.85-.54c-1.7-.48-2.63-1.16-2.63-2.52 0-1.22 1.12-2.1 2.83-2.1 1.7 0 2.87.88 3.11 2.34h5.93c-.24-3.66-3.11-6.43-7.05-6.43zM187.32 44.2h6.23v-7.35h.1c1.22 2.05 3.51 3.26 6.13 3.26 5.46 0 9.35-4.48 9.35-10.76v-.1c0-6.23-3.89-10.76-9.35-10.76-2.63 0-4.91 1.22-6.13 3.26h-.1v-3.07h-6.23v25.52zm12.27-21.28c2.97 0 5.16 2.43 5.16 6.33v.1c0 3.89-2.19 6.33-5.16 6.33-2.92 0-5.16-2.44-5.16-6.33v-.1c0-3.9 2.24-6.33 5.16-6.33zM136.08 18.52c2.92 0 5.16 2.43 5.16 6.33v.1c0 3.89-2.24 6.33-5.16 6.33-2.97 0-5.16-2.44-5.16-6.33v-.1c0-3.9 2.19-6.33 5.16-6.33zm0-5.74c-6.13 0-11.24 4.92-11.24 12.07v.1c0 7.15 5.11 12.07 11.24 12.07 6.13 0 11.24-4.92 11.24-12.07v-.1c0-7.15-5.11-12.07-11.24-12.07zM116.32 12.72v31.48h6.23V12.72h-6.23zM102.16 12.72V17h-1.95c-2.34 0-3.5 1.07-3.5 3.31v24.19H90.5V18.52h-2.1v-5.8h2.1V9.5h6.21v3.22h5.45zM76.99 12.72H70.8v31.48h6.19V12.72zM73.87 0C71.6 0 69.8 1.8 69.8 4.09s1.8 4.09 4.07 4.09 4.09-1.8 4.09-4.09S76.15 0 73.87 0zM57.67 24.52V44.2h6.23v-19.4c0-3.07 1.8-4.73 4.38-4.73 2.38 0 3.79 1.42 3.79 4.14V44.2h6.23v-20.9c0-5.55-3.31-8.91-8.52-8.91-3.21 0-5.79 1.51-7.15 3.9h-.1v-14.7h-6.23v40.85h1.37zM42.19 12.72h-6.23v19.4c0 3.07-1.8 4.73-4.38 4.73-2.38 0-3.79-1.42-3.79-4.14V12.72h-6.23v20.9c0 5.55 3.31 8.91 8.52 8.91 3.21 0 5.79-1.51 7.15-3.9h.1v3.5h4.86V12.72z"/></svg>`;
+            const tpLogoFinal = customTpLogoBase64 ? `<img src="${customTpLogoBase64}" alt="Trustpilot" style="height: 30px; object-fit:contain; margin: 0 auto 15px; display: block;">` : defaultTpLogoSVG;
+
+            let faqHTML = config.faqs.map(f => `
+                <details class="faq-item">
+                    <summary class="faq-question"><span>${f.q}</span><span class="arrow"></span></summary>
+                    <div class="faq-answer">${f.a}</div>
+                </details>`).join('');
+
+            const glowColor = hexToRgba(config.primary, 0.15);
+            const bgStyle = config.solidBg ? 
+                `background-color: ${config.bg};` : 
+                `background-color: ${config.bg}; background: radial-gradient(circle at 50% 0%, ${glowColor} 0%, transparent 50%), linear-gradient(to bottom, ${config.bg}, #000);`;
+
+            const jsonString = JSON.stringify(config).replace(/<\/script>/g, '<\\/script>');
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>${config.logo}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: ${config.primary}; --bg-dark: ${config.bg}; --text: ${config.textColor}; --btn-text: ${config.btnTextColor}; --font: 'Inter', sans-serif; --tp-green: #00b67a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { ${bgStyle} color: var(--text); font-family: var(--font); min-height: 100vh; overflow-x: hidden; line-height: 1.5; }
+        .wrapper { max-width: 480px; margin: 0 auto; padding: 20px; }
+        
+        /* Top Logos */
+        .top-logos-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 0 20px; border-bottom: 1px solid rgba(128,128,128,0.2); margin-bottom: 20px; }
+        .top-logos-bar img { height: ${config.topLogoSize}px; object-fit: contain; }
+
+        /* Navbar */
+        .navbar { text-align: center; padding-bottom: 20px; }
+        .logo { font-weight: 800; color: var(--primary); font-size: ${config.logoSize}rem; letter-spacing: -0.5px; }
+
+        /* Hero */
+        .hero { text-align: center; padding: 10px 0 20px; }
+        h1 { font-size: ${config.headSize}rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
+        .hero-img { width: 100%; height: auto; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(128,128,128,0.2); }
+        
+        /* Steps */
+        .steps-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; gap: 10px; }
+        .step-card { display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.05); padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.1); width: 100%; max-width: 340px; }
+        .step-num { width: 30px; height: 30px; background: var(--primary); color: var(--btn-text); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; font-size: 1rem; line-height: 0; padding: 0; margin: 0; }
+        .step-text { font-weight: 600; font-size: 0.95rem; text-align: left; }
+
+        /* Buttons & Urgency (UPDATED HOVER FX) */
+        .btn-col { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .btn { padding: 18px; border-radius: 12px; text-decoration: none; font-weight: 800; text-align: center; font-size: 1.1rem; transition: all 0.3s ease; display: block; width: 100%; }
+        .btn-primary { background: var(--primary); color: var(--btn-text); box-shadow: 0 4px 20px ${hexToRgba(config.primary, 0.4)}; text-transform: uppercase; letter-spacing: 0.5px;}
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px ${hexToRgba(config.primary, 0.6)}; filter: brightness(1.1); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+        .urgency-text { font-size: 0.85rem; color: #ff4747; font-weight: 600; margin-top: 5px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* Trustpilot Widget */
+        .tp-widget { margin: 30px auto; background: #fff; color: #191919; padding: 25px 20px; border-radius: 8px; text-align: center; max-width: 320px; border: 1px solid #e0e0e0; font-family: 'Inter', sans-serif;}
+        .tp-title-text { font-weight: 800; font-size: 1.4rem; margin-bottom: 10px; }
+        .tp-stars-row { display: flex; justify-content: center; gap: 3px; margin-bottom: 15px; }
+        .tp-star { background: #00b67a; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
+        .tp-star svg { width: 22px; height: 22px; fill: #fff; }
+        .tp-bottom-text { font-size: 0.9rem; color: #4b4b4b; }
+
+        /* FAQ Section */
+        .faq-section { margin-bottom: 40px; }
+        h2 { font-size: 1.5rem; margin-bottom: 20px; text-align: center; }
+        .faq-item { background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.1); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+        .faq-question { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.95rem; list-style: none; }
+        .faq-question::-webkit-details-marker { display: none; }
+        .arrow { width: 8px; height: 8px; border-right: 2px solid var(--primary); border-bottom: 2px solid var(--primary); transform: rotate(45deg); transition: 0.3s; }
+        details[open] .arrow { transform: rotate(225deg); }
+        .faq-answer { padding: 0 16px 16px; opacity: 0.8; line-height: 1.5; font-size: 0.9rem; }
+        
+        footer { text-align: center; opacity: 0.5; padding: 20px 0; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        ${topLogosHTML}
+        <nav class="navbar">
+            <div class="logo">${config.logo}</div>
+        </nav>
+        <div class="hero">
+            <h1>${config.headline.replace(/\n/g, '<br>')}</h1>
+            ${imgHTML}
+            ${stepsHTML}
+            <div class="btn-col">
+                <a href="${finalHref}" class="btn btn-primary"${finalTarget}${finalOnclick}>${config.btn1.text}</a>
+            </div>
+            ${urgencyHTML}
+        </div>
+        
+        <div class="tp-widget">
+            ${tpLogoFinal}
+            <div class="tp-title-text">Excellent</div>
+            <div class="tp-stars-row">${tpStars}</div>
+            <div class="tp-bottom-text">Based on <b>${config.trustpilot.count}</b> reviews</div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            ${faqHTML}
+        </div>
+        <footer>&copy; 2026 ${config.logo}. All rights reserved.</footer>
+    </div>
+    <script id="page-config" type="application/json">${jsonString}<\/script>
+</body>
+</html>`;
+        }
+
+        function updatePreview() {
+            const frame = document.getElementById('frame');
+            frame.srcdoc = generateHTML();
+        }
+
+        function downloadPage() {
+            const blob = new Blob([generateHTML()], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'premium_bridge_page.html';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        window.onload = function() {
+            addStep("Click the Continue button");
+            addStep("Enter your details securely");
+            addStep("Claim your exclusive offer!");
+            addFaq("Is this official?", "Yes, we are a verified partner.");
+            updatePreview();
+        };
+    </script>
+</body>
+</html>
