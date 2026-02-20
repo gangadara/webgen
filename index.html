@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bridge Page Generator v24 (Button FX & Cloaking)</title>
+    <title>Bridge Page Generator - Ultimate Edition (v31)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* --- EDITOR UI STYLES --- */
@@ -43,6 +43,7 @@
         .btn-download { width: 100%; padding: 15px; background: linear-gradient(90deg, #00e5ff, #00ff88); color: #000; border: none; border-radius: 5px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 20px; }
         
         .logo-preview-mini { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 4px; vertical-align: middle; margin-right: 10px;}
+        details summary { outline: none; padding-bottom: 5px; border-bottom: 1px solid #333; margin-bottom: 10px;}
     </style>
 </head>
 <body>
@@ -63,7 +64,7 @@
         </label>
         <input type="file" id="loadInput" accept=".html" onchange="loadHTMLFile(this)">
 
-        <h2 style="margin:0; color:white;">BridgeGen v24 <span style="font-size:0.8rem; color:var(--accent);">(Hover FX & Cloak)</span></h2>
+        <h2 style="margin:0; color:white;">BridgeGen Ultimate <span style="font-size:0.8rem; color:var(--accent);">(Full Control)</span></h2>
 
         <div>
             <h3>🎨 Theme & Typography</h3>
@@ -80,17 +81,23 @@
                  <label style="margin:0; cursor:pointer;" for="solidBg">Use Solid Background</label>
             </div>
             
-            <label>Brand Font Size (<span id="logoSizeVal">1.5</span>rem)</label>
-            <input type="range" id="logoSize" min="1" max="3" step="0.1" value="1.5" oninput="document.getElementById('logoSizeVal').innerText=this.value; updatePreview()">
+            <div class="row">
+                <div><label>Brand Size (<span id="logoSizeVal">1.5</span>rem)</label><input type="range" id="logoSize" min="1" max="3" step="0.1" value="1.5" oninput="document.getElementById('logoSizeVal').innerText=this.value; updatePreview()"></div>
+                <div><label>Brand Bold (<span id="logoWeightVal">800</span>)</label><input type="range" id="logoWeight" min="400" max="900" step="100" value="800" oninput="document.getElementById('logoWeightVal').innerText=this.value; updatePreview()"></div>
+            </div>
             
-            <label>Headline Font Size (<span id="headSizeVal">2.2</span>rem)</label>
-            <input type="range" id="headSize" min="1.5" max="3.5" step="0.1" value="2.2" oninput="document.getElementById('headSizeVal').innerText=this.value; updatePreview()">
+            <div class="row" style="margin-top: 5px;">
+                <div><label>Head Size (<span id="headSizeVal">2.2</span>rem)</label><input type="range" id="headSize" min="1.5" max="3.5" step="0.1" value="2.2" oninput="document.getElementById('headSizeVal').innerText=this.value; updatePreview()"></div>
+                <div><label>Head Bold (<span id="headWeightVal">800</span>)</label><input type="range" id="headWeight" min="400" max="900" step="100" value="800" oninput="document.getElementById('headWeightVal').innerText=this.value; updatePreview()"></div>
+            </div>
         </div>
 
         <div>
             <h3>🏆 Top Logos (As Seen On)</h3>
-            <label>Logo Size (<span id="topLogoSizeVal">24</span>px)</label>
-            <input type="range" id="topLogoSize" min="10" max="60" step="1" value="24" oninput="document.getElementById('topLogoSizeVal').innerText=this.value; updatePreview()">
+            <div class="row">
+                <div><label>Logo Size (<span id="topLogoSizeVal">24</span>px)</label><input type="range" id="topLogoSize" min="10" max="60" step="1" value="24" oninput="document.getElementById('topLogoSizeVal').innerText=this.value; updatePreview()"></div>
+                <div><label>Opacity (<span id="topLogoOpacityVal">1.0</span>)</label><input type="range" id="topLogoOpacity" min="0.1" max="1.0" step="0.1" value="1.0" oninput="document.getElementById('topLogoOpacityVal').innerText=this.value; updatePreview()"></div>
+            </div>
             <div id="topLogosList"></div>
             <label class="upload-box" style="padding: 5px;">
                 <i class="fas fa-plus-circle" style="font-size: 0.8rem;"></i> <p style="display:inline;">Upload Logo</p>
@@ -114,6 +121,42 @@
 
         <div>
             <h3>📋 Steps to Claim</h3>
+            
+            <details style="background:#1a1a1a; padding:10px; border-radius:4px; margin-bottom:10px; border-left: 3px solid #00e5ff;" open>
+                <summary style="cursor:pointer; font-size:0.8rem; color:#aaa; font-weight:bold;">⚙️ Advanced Step Styling</summary>
+                <div style="margin-top:10px;">
+                    <label>Layout Style</label>
+                    <select id="stepLayout" onchange="updatePreview()">
+                        <option value="card">Boxed Cards (Default)</option>
+                        <option value="centered">Centered Minimal</option>
+                        <option value="plain">Plain Text</option>
+                    </select>
+
+                    <label style="margin-top:10px;">Steps Opacity (<span id="stepOpacityVal">1.0</span>)</label>
+                    <input type="range" id="stepOpacity" min="0.3" max="1.0" step="0.05" value="1.0" oninput="document.getElementById('stepOpacityVal').innerText=this.value; updatePreview()">
+
+                    <div class="row" style="margin-top:5px;">
+                        <div><label>Number Text Color</label><input type="color" id="stepNumColor" value="#ffffff" oninput="updatePreview()"></div>
+                        <div><label>Number BG Color</label><input type="color" id="stepBgColor" value="#00e5ff" oninput="updatePreview()"></div>
+                    </div>
+
+                    <div class="row" style="margin-top:5px;">
+                        <div><label>Number Border Color</label><input type="color" id="stepBorderColor" value="#cccccc" oninput="updatePreview()"></div>
+                        <div><label>Border Size (<span id="stepBorderSizeVal">0</span>px)</label><input type="range" id="stepBorderSize" min="0" max="5" step="1" value="0" oninput="document.getElementById('stepBorderSizeVal').innerText=this.value; updatePreview()"></div>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; padding-top:5px; margin-bottom: 10px;">
+                        <input type="checkbox" id="stepBgTransparent" onchange="updatePreview()">
+                        <label style="margin:0; font-size:0.75rem;">Transparent Number Background</label>
+                    </div>
+                    
+                    <div class="row" style="margin-top:5px;">
+                        <div><label>Text Size (<span id="stepTextSizeVal">0.95</span>rem)</label><input type="range" id="stepTextSize" min="0.7" max="1.5" step="0.05" value="0.95" oninput="document.getElementById('stepTextSizeVal').innerText=this.value; updatePreview()"></div>
+                        <div><label>Text Bold (<span id="stepWeightVal">600</span>)</label><input type="range" id="stepWeight" min="400" max="900" step="100" value="600" oninput="document.getElementById('stepWeightVal').innerText=this.value; updatePreview()"></div>
+                    </div>
+                </div>
+            </details>
+
             <div id="stepsList"></div>
             <button class="btn-add" onclick="addStep()">+ Add Step</button>
         </div>
@@ -189,7 +232,9 @@ REQUIREMENTS:
 JSON STRUCTURE:
 {
   "primary": "#00e5ff", "bg": "#ffffff", "textColor": "#000000", "btnTextColor": "#ffffff", "solidBg": true,
-  "logoSize": "1.5", "headSize": "2.2", "topLogoSize": "24",
+  "logoSize": "1.5", "logoWeight": "800", "headSize": "2.2", "headWeight": "800",
+  "topLogoSize": "24", "topLogoOpacity": "1.0",
+  "stepLayout": "card", "stepOpacity": "1.0", "stepNumColor": "#ffffff", "stepWeight": "600",
   "logo": "Brand", "headline": "Headline",
   "heroImage": "",
   "topLogos": [], 
@@ -291,10 +336,37 @@ JSON STRUCTURE:
             
             document.getElementById('logoSize').value = data.logoSize || '1.5';
             document.getElementById('logoSizeVal').innerText = data.logoSize || '1.5';
+            document.getElementById('logoWeight').value = data.logoWeight || '800';
+            document.getElementById('logoWeightVal').innerText = data.logoWeight || '800';
+            
             document.getElementById('headSize').value = data.headSize || '2.2';
             document.getElementById('headSizeVal').innerText = data.headSize || '2.2';
+            document.getElementById('headWeight').value = data.headWeight || '800';
+            document.getElementById('headWeightVal').innerText = data.headWeight || '800';
+
             document.getElementById('topLogoSize').value = data.topLogoSize || '24';
             document.getElementById('topLogoSizeVal').innerText = data.topLogoSize || '24';
+            document.getElementById('topLogoOpacity').value = data.topLogoOpacity || '1.0';
+            document.getElementById('topLogoOpacityVal').innerText = data.topLogoOpacity || '1.0';
+
+            // Adv Steps
+            document.getElementById('stepLayout').value = data.stepLayout || 'card';
+            document.getElementById('stepOpacity').value = data.stepOpacity || '1.0';
+            document.getElementById('stepOpacityVal').innerText = data.stepOpacity || '1.0';
+            document.getElementById('stepBorderColor').value = data.stepBorderColor || '#cccccc';
+            document.getElementById('stepBorderSize').value = data.stepBorderSize !== undefined ? data.stepBorderSize : 0;
+            document.getElementById('stepBorderSizeVal').innerText = data.stepBorderSize !== undefined ? data.stepBorderSize : 0;
+            
+            document.getElementById('stepBgColor').value = data.stepBgColor || document.getElementById('primaryColor').value;
+            document.getElementById('stepBgTransparent').checked = data.stepBgTransparent || false;
+            
+            // New Bold & Color features for steps
+            document.getElementById('stepNumColor').value = data.stepNumColor || data.textColor || '#ffffff';
+            document.getElementById('stepWeight').value = data.stepWeight || '600';
+            document.getElementById('stepWeightVal').innerText = data.stepWeight || '600';
+
+            document.getElementById('stepTextSize').value = data.stepTextSize || '0.95';
+            document.getElementById('stepTextSizeVal').innerText = data.stepTextSize || '0.95';
 
             document.getElementById('logoText').value = data.logo || '';
             document.getElementById('headline').value = data.headline || '';
@@ -340,8 +412,22 @@ JSON STRUCTURE:
                 btnTextColor: document.getElementById('btnTextColor').value,
                 solidBg: document.getElementById('solidBg').checked,
                 logoSize: document.getElementById('logoSize').value,
+                logoWeight: document.getElementById('logoWeight').value,
                 headSize: document.getElementById('headSize').value,
+                headWeight: document.getElementById('headWeight').value,
                 topLogoSize: document.getElementById('topLogoSize').value,
+                topLogoOpacity: document.getElementById('topLogoOpacity').value,
+                
+                stepLayout: document.getElementById('stepLayout').value,
+                stepOpacity: document.getElementById('stepOpacity').value,
+                stepBorderColor: document.getElementById('stepBorderColor').value,
+                stepBorderSize: document.getElementById('stepBorderSize').value,
+                stepBgColor: document.getElementById('stepBgColor').value,
+                stepBgTransparent: document.getElementById('stepBgTransparent').checked,
+                stepNumColor: document.getElementById('stepNumColor').value,
+                stepWeight: document.getElementById('stepWeight').value,
+                stepTextSize: document.getElementById('stepTextSize').value,
+
                 logo: document.getElementById('logoText').value,
                 headline: document.getElementById('headline').value,
                 heroImage: finalImgSrc,
@@ -367,10 +453,10 @@ JSON STRUCTURE:
             let finalOnclick = '';
 
             if (config.btn1.hideLink) {
-                finalHref = 'javascript:void(0);'; // Hides URL in hover status bar
+                finalHref = 'javascript:void(0);'; 
                 if (config.btn1.newTab) {
                     finalOnclick = ` onclick="window.open('${config.btn1.link}', '_blank'); return false;"`;
-                    finalTarget = ''; // handled by JS
+                    finalTarget = ''; 
                 } else {
                     finalOnclick = ` onclick="window.location.href='${config.btn1.link}'; return false;"`;
                 }
@@ -384,14 +470,60 @@ JSON STRUCTURE:
 
             const imgHTML = finalImgSrc ? `<img src="${finalImgSrc}" class="hero-img">` : '';
 
+            // GENERATE STEPS DYNAMIC CSS
+            let stepLayoutCSS = '';
             let stepsHTML = '';
+            
             if(config.steps.length > 0){
-                let sHTML = config.steps.map((s, i) => `
-                    <div class="step-card">
-                        <div class="step-num">${i+1}</div>
-                        <div class="step-text">${s}</div>
-                    </div>`).join('');
-                stepsHTML = `<div class="steps-container">${sHTML}</div>`;
+                const sBg = config.stepBgTransparent ? 'transparent' : config.stepBgColor;
+                const bSize = config.stepBorderSize;
+                const bColor = config.stepBorderColor;
+                const tSize = config.stepTextSize;
+                const nColor = config.stepNumColor;
+                const tWeight = config.stepWeight;
+                
+                if (config.stepLayout === 'card') {
+                    stepLayoutCSS = `
+                        .steps-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; gap: 10px; opacity: ${config.stepOpacity}; }
+                        .step-card { display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.05); padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.1); width: 100%; max-width: 340px; }
+                        .step-num { width: 30px; height: 30px; background: ${sBg}; border: ${bSize}px solid ${bColor}; color: ${nColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; font-size: 1rem; line-height: 0; padding: 0; margin: 0; }
+                        .step-text { font-weight: ${tWeight}; font-size: ${tSize}rem; text-align: left; color: var(--text); }
+                    `;
+                    let sHTML = config.steps.map((s, i) => `
+                        <div class="step-card">
+                            <div class="step-num">${i+1}</div>
+                            <div class="step-text">${s}</div>
+                        </div>`).join('');
+                    stepsHTML = `<div class="steps-container">${sHTML}</div>`;
+                } 
+                else if (config.stepLayout === 'centered') {
+                    stepLayoutCSS = `
+                        .steps-container { display: flex; flex-direction: column; align-items: center; margin: 0 auto 25px auto; gap: 16px; width: 100%; max-width: 320px; opacity: ${config.stepOpacity}; }
+                        .step-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: transparent; padding: 0; border: none; width: 100%; text-align: center; }
+                        .step-num { width: 28px; height: 28px; background: ${sBg}; border: ${bSize}px solid ${bColor}; color: ${nColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 0.9rem; }
+                        .step-text { font-weight: ${tWeight}; font-size: ${tSize}rem; text-align: center; max-width: 260px; line-height: 1.3; color: var(--text); }
+                    `;
+                    let sHTML = config.steps.map((s, i) => `
+                        <div class="step-card">
+                            <div class="step-num">${i+1}</div>
+                            <div class="step-text">${s}</div>
+                        </div>`).join('');
+                    stepsHTML = `<div class="steps-container">${sHTML}</div>`;
+                }
+                else if (config.stepLayout === 'plain') {
+                    stepLayoutCSS = `
+                        .steps-container { display: flex; flex-direction: column; align-items: center; margin: 0 auto 25px auto; gap: 10px; width: 100%; max-width: 320px; opacity: ${config.stepOpacity}; }
+                        .step-card { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 6px; background: transparent; padding: 0; border: none; width: 100%; text-align: center; }
+                        .step-num { color: ${nColor}; font-weight: ${tWeight}; flex-shrink: 0; font-size: ${tSize}rem; background: ${sBg}; border: ${bSize}px solid ${bColor}; padding: 0 4px; border-radius: 4px; }
+                        .step-text { font-weight: ${tWeight}; font-size: ${tSize}rem; text-align: left; line-height: 1.4; color: var(--text); }
+                    `;
+                    let sHTML = config.steps.map((s, i) => `
+                        <div class="step-card">
+                            <div class="step-num">${i+1}.</div>
+                            <div class="step-text">${s}</div>
+                        </div>`).join('');
+                    stepsHTML = `<div class="steps-container">${sHTML}</div>`;
+                }
             }
 
             const urgencyHTML = config.urgency.show ? `<div class="urgency-text">${config.urgency.text}</div>` : '';
@@ -419,7 +551,7 @@ JSON STRUCTURE:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${config.logo}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root { --primary: ${config.primary}; --bg-dark: ${config.bg}; --text: ${config.textColor}; --btn-text: ${config.btnTextColor}; --font: 'Inter', sans-serif; --tp-green: #00b67a; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -428,24 +560,21 @@ JSON STRUCTURE:
         
         /* Top Logos */
         .top-logos-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px 0 20px; border-bottom: 1px solid rgba(128,128,128,0.2); margin-bottom: 20px; }
-        .top-logos-bar img { height: ${config.topLogoSize}px; object-fit: contain; }
+        .top-logos-bar img { height: ${config.topLogoSize}px; object-fit: contain; opacity: ${config.topLogoOpacity}; }
 
         /* Navbar */
         .navbar { text-align: center; padding-bottom: 20px; }
-        .logo { font-weight: 800; color: var(--primary); font-size: ${config.logoSize}rem; letter-spacing: -0.5px; }
+        .logo { font-weight: ${config.logoWeight}; color: var(--primary); font-size: ${config.logoSize}rem; letter-spacing: -0.5px; }
 
         /* Hero */
         .hero { text-align: center; padding: 10px 0 20px; }
-        h1 { font-size: ${config.headSize}rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
+        h1 { font-size: ${config.headSize}rem; font-weight: ${config.headWeight}; line-height: 1.2; margin-bottom: 20px; color: var(--text); }
         .hero-img { width: 100%; height: auto; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(128,128,128,0.2); }
         
-        /* Steps */
-        .steps-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; gap: 10px; }
-        .step-card { display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.05); padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.1); width: 100%; max-width: 340px; }
-        .step-num { width: 30px; height: 30px; background: var(--primary); color: var(--btn-text); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; font-size: 1rem; line-height: 0; padding: 0; margin: 0; }
-        .step-text { font-weight: 600; font-size: 0.95rem; text-align: left; }
+        /* Steps DYNAMIC */
+        ${stepLayoutCSS}
 
-        /* Buttons & Urgency (UPDATED HOVER FX) */
+        /* Buttons & Urgency */
         .btn-col { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
         .btn { padding: 18px; border-radius: 12px; text-decoration: none; font-weight: 800; text-align: center; font-size: 1.1rem; transition: all 0.3s ease; display: block; width: 100%; }
         .btn-primary { background: var(--primary); color: var(--btn-text); box-shadow: 0 4px 20px ${hexToRgba(config.primary, 0.4)}; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -531,5 +660,4 @@ JSON STRUCTURE:
         };
     </script>
 </body>
-
 </html>
